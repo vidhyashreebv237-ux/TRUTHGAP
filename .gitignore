@@ -1,0 +1,16 @@
+# Environment variables and secrets (NEVER commit these!)
+.env
+.env.local
+
+# Python virtual environment
+venv/
+env/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Streamlit config / cache
+.streamlit/secrets.toml
