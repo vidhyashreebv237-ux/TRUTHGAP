@@ -1,0 +1,14 @@
+# Core AI & LLM SDK
+google-genai>=1.0.0
+
+# Web Dashboard
+streamlit>=1.35.0
+
+# Data Analysis & Handling
+pandas>=2.2.0
+
+# Data Visualization
+plotly>=5.22.0
+
+# Environment Variable Management
+python-dotenv>=1.0.1
