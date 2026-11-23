@@ -1,11 +1,12 @@
 """
 Configuration module for TRUTHGAP.
 Dynamically resolves environment variables and Streamlit Cloud secrets.
+Includes automatic key sanitization for accidental quotes or whitespace.
 """
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 from dotenv import load_dotenv
 
 # Project root directory
@@ -28,29 +29,43 @@ GAP_THRESHOLDS = {
 }
 
 
+def sanitize_api_key(val: Any) -> str:
+    """
+    Cleans an API key by stripping:
+    - Leading and trailing whitespace / newlines
+    - Accidental surrounding quotes (' " ` “ ” ‘ ’) commonly caused by copy-pasting
+    """
+    if not val:
+        return ""
+    cleaned = str(val).strip()
+    # Strip any accidental wrapping quotes (single, double, backtick, smart quotes)
+    cleaned = cleaned.strip("'\"`“”‘’ \t\n\r")
+    return cleaned
+
+
 def get_gemini_api_key() -> str:
     """
-    Dynamically retrieves the Gemini API key from either:
+    Dynamically retrieves and sanitizes the Gemini API key from either:
     1. OS Environment / .env file
     2. Streamlit Cloud Secrets (handles uppercase, lowercase, and TOML sections)
     """
     # 1. Check OS Environment / Local .env
-    key = os.getenv("GEMINI_API_KEY", "").strip()
-    if key and key != "your_actual_gemini_api_key_here":
-        return key
+    env_key = sanitize_api_key(os.getenv("GEMINI_API_KEY", ""))
+    if env_key and env_key != "your_actual_gemini_api_key_here":
+        return env_key
 
     # 2. Check Streamlit Cloud Secrets at runtime
     try:
         import streamlit as st
         # Direct uppercase key
         if "GEMINI_API_KEY" in st.secrets:
-            val = str(st.secrets["GEMINI_API_KEY"]).strip()
+            val = sanitize_api_key(st.secrets["GEMINI_API_KEY"])
             if val:
                 return val
 
         # Lowercase variation
         if "gemini_api_key" in st.secrets:
-            val = str(st.secrets["gemini_api_key"]).strip()
+            val = sanitize_api_key(st.secrets["gemini_api_key"])
             if val:
                 return val
 
@@ -58,15 +73,14 @@ def get_gemini_api_key() -> str:
         for section in st.secrets.values():
             if isinstance(section, dict):
                 if "GEMINI_API_KEY" in section:
-                    val = str(section["GEMINI_API_KEY"]).strip()
+                    val = sanitize_api_key(section["GEMINI_API_KEY"])
                     if val:
                         return val
                 if "gemini_api_key" in section:
-                    val = str(section["gemini_api_key"]).strip()
+                    val = sanitize_api_key(section["gemini_api_key"])
                     if val:
                         return val
     except Exception:
-        # Secrets not available or parsing failed
         pass
 
     return ""
@@ -88,7 +102,6 @@ def get_api_key_diagnostics() -> Dict[str, Any]:
 
     try:
         import streamlit as st
-        # Check if secrets can be accessed
         secrets_keys = list(st.secrets.keys())
         secrets_available = len(secrets_keys) > 0
     except Exception as e:
@@ -98,7 +111,7 @@ def get_api_key_diagnostics() -> Dict[str, Any]:
     is_configured = bool(resolved_key)
 
     source = "Not Found"
-    if env_found and resolved_key == os.getenv("GEMINI_API_KEY", "").strip():
+    if env_found and resolved_key == sanitize_api_key(os.getenv("GEMINI_API_KEY", "")):
         source = "Local .env / OS Environment"
     elif is_configured:
         source = "Streamlit Cloud Secrets"
