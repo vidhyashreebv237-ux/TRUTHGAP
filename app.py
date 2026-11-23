@@ -10,7 +10,7 @@ import json
 import streamlit as st
 import pandas as pd
 
-from src.config import GAP_THRESHOLDS, DEFAULT_MODEL
+from src.config import GAP_THRESHOLDS, DEFAULT_MODEL, get_api_key_diagnostics
 from src.analyzers import TruthGapAnalyzer, categorize_gap_score
 from src.visualizer import (
     create_gauge_chart,
@@ -290,6 +290,26 @@ with st.sidebar:
         apply_preset(selected_preset)
         st.success("✅ Scenario data loaded into input fields!")
         st.rerun()
+
+    st.markdown("---")
+    st.markdown("### 🔑 API Key Status")
+    diag = get_api_key_diagnostics()
+    if diag["is_configured"]:
+        st.success(f"✅ Active ({diag['source']})")
+    else:
+        st.error("❌ Key Not Detected")
+        with st.expander("🔍 Diagnostic Details"):
+            st.caption(
+                "Ensure your key is configured in **Streamlit Cloud > App Settings > Secrets** using valid TOML format:\n\n"
+                '```toml\nGEMINI_API_KEY = "your_actual_key_here"\n```\n'
+                "⚠️ In TOML, values must be enclosed in double quotes."
+            )
+            if diag.get("secrets_error"):
+                st.warning(f"Secrets Error: {diag['secrets_error']}")
+            elif diag.get("secrets_keys_found"):
+                st.info(f"Available keys in secrets: {diag['secrets_keys_found']}")
+            else:
+                st.info("No secrets detected in st.secrets.")
 
     st.markdown("---")
     st.markdown("### 🧠 System Architecture")
