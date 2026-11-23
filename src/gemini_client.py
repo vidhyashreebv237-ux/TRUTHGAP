@@ -13,6 +13,13 @@ from google.genai import types
 from google.genai.errors import APIError
 
 from src.config import GEMINI_API_KEY, DEFAULT_MODEL, DEFAULT_TEMPERATURE, validate_config
+from src.config import (
+    GEMINI_API_KEY,
+    DEFAULT_MODEL,
+    DEFAULT_TEMPERATURE,
+    validate_config,
+    get_gemini_api_key,
+)
 
 
 def extract_json_from_text(raw_text: str) -> Union[Dict, List]:
@@ -49,6 +56,7 @@ class GeminiClient:
     ):
         validate_config()
         self.api_key = api_key or GEMINI_API_KEY
+        self.api_key = api_key or get_gemini_api_key() or GEMINI_API_KEY
         self.model = model
         self.temperature = temperature
         
