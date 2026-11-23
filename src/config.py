@@ -18,7 +18,7 @@ if ENV_FILE.exists():
     load_dotenv(dotenv_path=ENV_FILE)
 
 # Default Gemini model configuration
-DEFAULT_MODEL = "gemini-2.5-flash-lite"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 DEFAULT_TEMPERATURE = 0.2
 
 # Expectation gap classification thresholds
